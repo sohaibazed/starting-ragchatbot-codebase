@@ -4,6 +4,7 @@ These stub out AIGenerator (no network) but use the real VectorStore against
 the on-disk chroma_db so we exercise tool registration, tool execution, and
 source wiring end-to-end.
 """
+
 from unittest.mock import MagicMock, patch
 import os
 import sys
@@ -16,7 +17,6 @@ sys.path.insert(0, str(BACKEND))
 
 from config import config  # noqa: E402
 from rag_system import RAGSystem  # noqa: E402
-
 
 pytestmark = pytest.mark.skipif(
     not (BACKEND / "chroma_db").exists(),
@@ -60,15 +60,14 @@ def test_real_query_end_to_end(rag):
 def test_content_query_routes_through_search_tool(rag):
     """Simulate Claude deciding to call search_course_content."""
     with patch.object(rag.ai_generator, "generate_response") as mock_gen:
+
         def fake_generate(query, conversation_history=None, tools=None, tool_manager=None):
             # Ensure tools were provided
             assert tools is not None
             names = {t["name"] for t in tools}
             assert "search_course_content" in names
             # Manually invoke the search tool as Claude would
-            result = tool_manager.execute_tool(
-                "search_course_content", query="MCP architecture"
-            )
+            result = tool_manager.execute_tool("search_course_content", query="MCP architecture")
             assert "No relevant content found" not in result
             assert result  # non-empty
             return "stubbed answer"
@@ -101,9 +100,11 @@ def test_search_tool_handles_unknown_course(rag):
 
 def test_sources_reset_after_query(rag):
     with patch.object(rag.ai_generator, "generate_response") as mock_gen:
+
         def fake_generate(query, conversation_history=None, tools=None, tool_manager=None):
             tool_manager.execute_tool("search_course_content", query="MCP")
             return "ok"
+
         mock_gen.side_effect = fake_generate
         rag.query("q")
 

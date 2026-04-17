@@ -1,4 +1,5 @@
 """Tests for AIGenerator tool-calling behavior."""
+
 from unittest.mock import MagicMock, patch
 import pytest
 
@@ -75,9 +76,7 @@ def test_generate_response_invokes_search_tool_and_returns_final_text(mock_anthr
     )
 
     assert out == "synthesized"
-    tool_manager.execute_tool.assert_called_once_with(
-        "search_course_content", query="MCP"
-    )
+    tool_manager.execute_tool.assert_called_once_with("search_course_content", query="MCP")
     # two API calls: initial + post-tool
     assert client.messages.create.call_count == 2
     # Final call should NOT include tools

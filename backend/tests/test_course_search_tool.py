@@ -1,4 +1,5 @@
 """Tests for CourseSearchTool.execute()."""
+
 from unittest.mock import MagicMock
 import pytest
 
@@ -34,9 +35,7 @@ def test_execute_tracks_sources_with_links():
     )
     tool, store = make_tool(results)
     tool.execute(query="q")
-    assert tool.last_sources == [
-        {"text": "MCP Course - Lesson 3", "url": "http://lesson/link"}
-    ]
+    assert tool.last_sources == [{"text": "MCP Course - Lesson 3", "url": "http://lesson/link"}]
     store.get_lesson_link.assert_called_once_with("MCP Course", 3)
 
 
