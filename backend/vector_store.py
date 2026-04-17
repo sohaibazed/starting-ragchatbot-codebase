@@ -106,13 +106,13 @@ class VectorStore:
                 query_texts=[course_name],
                 n_results=1
             )
-            
+
             if results['documents'][0] and results['metadatas'][0]:
                 # Return the title (which is now the ID)
                 return results['metadatas'][0][0]['title']
         except Exception as e:
             print(f"Error resolving course name: {e}")
-        
+
         return None
     
     def _build_filter(self, course_title: Optional[str], lesson_number: Optional[int]) -> Optional[Dict]:

@@ -23,13 +23,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Event Listeners
 function setupEventListeners() {
+    // New chat button
+    document.getElementById('newChatButton').addEventListener('click', createNewSession);
+
     // Chat functionality
     sendButton.addEventListener('click', sendMessage);
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-    
-    
+
     // Suggested questions
     document.querySelectorAll('.suggested-item').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -122,10 +124,26 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     let html = `<div class="message-content">${displayContent}</div>`;
     
     if (sources && sources.length > 0) {
+        // Deduplicate sources by text
+        const seen = new Set();
+        const uniqueSources = sources.filter(source => {
+            const text = typeof source === 'string' ? source : source.text;
+            if (seen.has(text)) return false;
+            seen.add(text);
+            return true;
+        });
+        const sourceItems = uniqueSources.map(source => {
+            const text = typeof source === 'string' ? source : source.text;
+            const url = typeof source === 'string' ? null : source.url;
+            if (url) {
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="source-item">${escapeHtml(text)}</a>`;
+            }
+            return `<span class="source-item">${escapeHtml(text)}</span>`;
+        });
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <div class="sources-content">${sourceItems.join('')}</div>
             </details>
         `;
     }

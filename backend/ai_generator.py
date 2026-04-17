@@ -7,15 +7,16 @@ class AIGenerator:
     # Static system prompt to avoid rebuilding on each call
     SYSTEM_PROMPT = """ You are an AI assistant specialized in course materials and educational content with access to a comprehensive search tool for course information.
 
-Search Tool Usage:
-- Use the search tool **only** for questions about specific course content or detailed educational materials
-- **One search per query maximum**
-- Synthesize search results into accurate, fact-based responses
-- If search yields no results, state this clearly without offering alternatives
+Tool Usage:
+- `search_course_content` — use **only** for questions about specific course content or detailed educational materials. One call per query maximum.
+- `get_course_outline` — use for questions about a course's outline, structure, syllabus, or lesson list. When you use this tool, your reply MUST include the course title, the course link, and every lesson's number and title.
+- Synthesize tool results into accurate, fact-based responses.
+- If a tool yields no results, state this clearly without offering alternatives.
 
 Response Protocol:
-- **General knowledge questions**: Answer using existing knowledge without searching
-- **Course-specific questions**: Search first, then answer
+- **General knowledge questions**: Answer using existing knowledge without using tools
+- **Course content questions**: Use `search_course_content` first, then answer
+- **Course outline/structure questions**: Use `get_course_outline` first, then answer
 - **No meta-commentary**:
  - Provide direct answers only — no reasoning process, search explanations, or question-type analysis
  - Do not mention "based on the search results"
@@ -29,6 +30,14 @@ All responses must be:
 Provide only the direct answer to what was asked.
 """
     
+    @staticmethod
+    def _extract_text(response) -> str:
+        """Return the first text block's content, or empty string if none."""
+        for block in response.content or []:
+            if getattr(block, "type", None) == "text":
+                return block.text
+        return ""
+
     def __init__(self, api_key: str, model: str):
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = model
@@ -84,7 +93,7 @@ Provide only the direct answer to what was asked.
             return self._handle_tool_execution(response, api_params, tool_manager)
         
         # Return direct response
-        return response.content[0].text
+        return self._extract_text(response)
     
     def _handle_tool_execution(self, initial_response, base_params: Dict[str, Any], tool_manager):
         """
@@ -132,4 +141,4 @@ Provide only the direct answer to what was asked.
         
         # Get final response
         final_response = self.client.messages.create(**final_params)
-        return final_response.content[0].text
+        return self._extract_text(final_response)
