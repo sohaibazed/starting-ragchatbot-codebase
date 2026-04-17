@@ -17,9 +17,53 @@ document.addEventListener('DOMContentLoaded', () => {
     courseTitles = document.getElementById('courseTitles');
     
     setupEventListeners();
+    initializeTheme();
     createNewSession();
     loadCourseStats();
 });
+
+// Theme Toggle
+function initializeTheme() {
+    const toggle = document.getElementById('themeToggle');
+    if (!toggle) return;
+
+    // The pre-paint inline script in <head> already set data-theme. Sync ARIA to it.
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    applyTheme(current);
+
+    toggle.addEventListener('click', () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        applyTheme(next);
+        localStorage.setItem('theme', next);
+    });
+
+    toggle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggle.click();
+        }
+    });
+
+    // Follow OS theme changes live — but only if the user hasn't made an explicit choice.
+    if (window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: light)');
+        const handler = (e) => {
+            if (localStorage.getItem('theme')) return;
+            applyTheme(e.matches ? 'light' : 'dark');
+        };
+        if (mq.addEventListener) mq.addEventListener('change', handler);
+        else if (mq.addListener) mq.addListener(handler);
+    }
+}
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) {
+        toggle.setAttribute('aria-checked', theme === 'light' ? 'true' : 'false');
+        toggle.setAttribute('aria-label', theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
+    }
+}
 
 // Event Listeners
 function setupEventListeners() {
